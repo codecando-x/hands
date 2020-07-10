@@ -9,64 +9,30 @@ class HierarchyAndStructure:
     __py_code_access_keys = {}
     __separator = '.'
     __index_identifier = 'i'
+    __type_list = [dict, list, tuple, set]
+    __empties = {dict:'{}', list:'[]', tuple:'()', set:'{}'}
+    __inits = {dict:{}, list:[], tuple:(), set:{}}
+    __direct_access_templates = {dict:"{}['{}']", list:"{}[{}]", tuple:"{}[{}]", set:"{}[{}]"}
+    __obj_chain_templates = {dict:"{}X{}", list:"{}X{}", tuple:"{}X{}", set:"{}X{}"}
 
-    __empties = {
-        dict:'{}',
-        list:'[]',
-        tuple:'()',
-        set:'{}'
-    }
-
-    __inits = {
-        dict:{},
-        list:[],
-        tuple:(),
-        set:{}
-    }
-
-    __direct_access_templates = {
-        dict:"{}['{}']",
-        list:"{}[{}]",
-        tuple:"{}[{}]",
-        set:"{}[{}]"
-    }
-
-    __obj_chain_templates = {
-        dict:"{}X{}",
-        list:"{}X{}",
-        tuple:"{}X{}",
-        set:"{}X{}"
-    }
-
-    def __init__(self, data = {}, file_path: str = '', separator: str = '.', index_identifier: str = 'i'):
+    def __init__(self, data = {}, separator: str = '.', index_identifier: str = 'i'):
         self.__data = data
-        self.__file_path = file_path
         self.__separator = separator
         self.__index_identifier = index_identifier
 
-        """
-        while we recursively traverse the the data object once, we do the following things:
-            - build a generated object hierarchy which one could access like(one.two.three.val),
-                to get rid of the bracket access pattern
-            - build a list of all key:val pairs which will enable direct lookup without recursing again
-            - build a list of all access code snippets, mostly used for discovery to find out
-                available keys deep in the object hierarchy, also for looking up value deep down
-
-        """
         self.__generated_object = self.__build(self.__data, types.SimpleNamespace(), 'X', 'X')
 
-        print("======================================\n")
-        self.print_obj_access_keys()
-        print("======================================\n")
-        self.print_direct_access_keys()
+    def direct_access_keys(self, show_values: bool = False) -> str:
+        if show_values is True:
+            return json.dumps(self.__py_code_access_keys, indent=4)
+        else:
+            return json.dumps(list(self.__py_code_access_keys.keys()), indent=4)
 
-    #def query(self, sql
-
-    def print_direct_access_keys(self):
-        print(json.dumps(self.__py_code_access_keys, indent=4))
-
-    def print_obj_access_keys(self):
-        print(json.dumps(self.__quick_access_data, indent=4))
+    def obj_access_keys(self, show_values: bool = False) -> str:
+        if show_values is True:
+            return json.dumps(self.__quick_access_data, indent=4)
+        else:
+            return json.dumps(list(self.__quick_access_data.keys()), indent=4)
 
     def get(self, key: str):
         if key in self.__quick_access_data:
@@ -74,9 +40,7 @@ class HierarchyAndStructure:
         else:
             raise KeyError("key: {} not found".format(key))
 
-    """
-        will print all access keys/values to reach all values across object structure
-    """
+    #def query(self, sql: str):
 
     def __build(self, current_obj, obj_hierarchy, direct_access_key_hierarchy: str = '', obj_chain_key_hierarchy: str = ''):
 
@@ -119,9 +83,11 @@ class HierarchyAndStructure:
                 index_key = 'i' + str(index_key)
 
             val_type = type(val)
+
             new_direct_access_key_hierarchy = direct_access_template.format(direct_access_key_hierarchy,str(key))
             obj_chain_key_hierarchy = obj_chain_template.format(obj_chain_key_hierarchy,str(key))
-            if val_type in [dict, list, tuple, set]:
+
+            if val_type in self.__type_list:
                 new_obj_val = self.__build(val, types.SimpleNamespace(), new_direct_access_key_hierarchy, obj_chain_key_hierarchy)
                 setattr(obj_hierarchy, index_key, new_obj_val)
             else:
@@ -129,17 +95,9 @@ class HierarchyAndStructure:
                 if val_type is str and len(new_val) == 0:
                     new_val = '""'
 
-                #print("{} : {}".format(new_direct_access_key_hierarchy, new_val))
-
-                #add key:val pair to quick_access_data for easy flat retrieval latter
                 self.__quick_access_data[obj_chain_key_hierarchy] = new_val
-
                 self.__py_code_access_keys[new_direct_access_key_hierarchy] = new_val
 
                 setattr(obj_hierarchy, index_key, new_val)
 
         return obj_hierarchy
-
-    '''
-    def query
-    '''
