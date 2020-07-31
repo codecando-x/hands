@@ -37,3 +37,5 @@ elif args.py_keys is not None:
     print(hands.direct_access_keys(args.values))
 elif args.obj_keys is not None:
     print(hands.obj_access_keys(args.values))
+elif args.values is not None:
+    print(hands.values())

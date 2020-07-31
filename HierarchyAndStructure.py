@@ -40,7 +40,8 @@ class HierarchyAndStructure:
         else:
             raise KeyError("key: {} not found".format(key))
 
-    #def query(self, sql: str):
+    def values(self):
+        return json.dumps(list(self.__quick_access_data.values()), indent=4)
 
     def __build(self, current_obj, obj_hierarchy, direct_access_key_hierarchy: str = '', obj_chain_key_hierarchy: str = ''):
 

@@ -1,4 +1,9 @@
-class TestHierarchyData:
+
+import unittest
+
+from .HierarchyAndStructure import HierarchyAndStructure
+
+class TestHierarchyAndStructure:
 
     __data = None
 
@@ -24,5 +29,5 @@ class TestHierarchyData:
             "x":["e","r"]
         }
 
-    def sample(self):
-        return self.__data
+    def test_values(self):
+        hands = HierarchyAndStructure(self.__data)
