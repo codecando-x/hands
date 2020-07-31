@@ -2,7 +2,6 @@ import json
 import sys
 import argparse
 
-from TestHierarchyData import TestHierarchyData
 from HierarchyAndStructure import HierarchyAndStructure
 
 arg_parser = argparse.ArgumentParser()
