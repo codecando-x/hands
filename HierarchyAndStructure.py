@@ -20,7 +20,7 @@ class HierarchyAndStructure:
         self.__separator = separator
         self.__index_identifier = index_identifier
 
-        self.__generated_object = self.__build(self.__data, types.SimpleNamespace(), 'X', 'X')
+        self.__generated_object = self.__build(self.__data, types.SimpleNamespace(), 'X', 'X', '', '', 0)
 
     def direct_access_keys(self, show_values: bool = False) -> str:
         if show_values is True:
@@ -43,7 +43,7 @@ class HierarchyAndStructure:
     def values(self):
         return json.dumps(list(self.__quick_access_data.values()), indent=4)
 
-    def __build(self, current_obj, obj_hierarchy, direct_access_key_hierarchy: str = '', obj_chain_key_hierarchy: str = ''):
+    def __build(self, current_obj, obj_hierarchy, direct_access_key_hierarchy: str = '', obj_chain_key_hierarchy: str = '', last_key: str = '', last_type = '', inner_cnt: int = 0):
 
         current_object_type = type(current_obj)
 
@@ -88,10 +88,19 @@ class HierarchyAndStructure:
             new_direct_access_key_hierarchy = direct_access_template.format(direct_access_key_hierarchy,str(key))
             obj_chain_key_hierarchy = obj_chain_template.format(obj_chain_key_hierarchy,str(key))
 
+            print("last_key: {} key: {} val_type: {} last_type: {} inner_cnt: {} obj_hierarchy: {}".format(str(last_key), str(key), str(val_type), str(last_type), str(inner_cnt), obj_chain_key_hierarchy))
+            '''
+            if len(str(last_key)) == 0 or inner_cnt == 0:
+                obj_chain_key_hierarchy = key
+                print(obj_chain_key_hierarchy)
+            '''
+
             if val_type in self.__type_list:
-                new_obj_val = self.__build(val, types.SimpleNamespace(), new_direct_access_key_hierarchy, obj_chain_key_hierarchy)
+                inner_cnt = len(val)
+                new_obj_val = self.__build(val, types.SimpleNamespace(), new_direct_access_key_hierarchy, obj_chain_key_hierarchy, key, val_type, inner_cnt)
                 setattr(obj_hierarchy, index_key, new_obj_val)
             else:
+                inner_cnt -= 1
                 new_val = str(val)
                 if val_type is str and len(new_val) == 0:
                     new_val = '""'
