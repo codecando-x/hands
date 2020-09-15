@@ -15,39 +15,51 @@ class HierarchyAndStructure:
     __direct_access_templates = {dict:"{}['{}']", list:"{}[{}]", tuple:"{}[{}]", set:"{}[{}]"}
     __obj_chain_templates = {dict:"{}X{}", list:"{}X{}", tuple:"{}X{}", set:"{}X{}"}
 
-    def __init__(self, data = {}, separator: str = '.', index_identifier: str = 'i'):
+    def __init__(self, data = None, separator: str = '.', index_identifier: str = 'i'):
+
+        if data is None:
+            return
+
         self.__data = data
         self.__separator = separator
         self.__index_identifier = index_identifier
 
-        self.__generated_object = self.__build(self.__data, types.SimpleNamespace(), 'X', 'X', '', '', 0)
+        #we do this here so we do not have to do it while recursing
+        for type_name in self.__type_list:
+            self.__obj_chain_templates[type_name] = self.__obj_chain_templates[type_name].replace('X', self.__separator)
 
+        self.__generated_object = self.__build(self.__data, types.SimpleNamespace(), 'X', 'X')
+
+    # returns the python code one would use to access certain keys in the object
     def direct_access_keys(self, show_values: bool = False) -> str:
         if show_values is True:
             return json.dumps(self.__py_code_access_keys, indent=4)
         else:
             return json.dumps(list(self.__py_code_access_keys.keys()), indent=4)
 
+    # returns key strings delimited using a dot
     def obj_access_keys(self, show_values: bool = False) -> str:
         if show_values is True:
             return json.dumps(self.__quick_access_data, indent=4)
         else:
             return json.dumps(list(self.__quick_access_data.keys()), indent=4)
 
+    #get the value of a flattened key
     def get(self, key: str):
         if key in self.__quick_access_data:
             return self.__quick_access_data[key]
         else:
             raise KeyError("key: {} not found".format(key))
 
+    # return only the values
     def values(self):
         return json.dumps(list(self.__quick_access_data.values()), indent=4)
 
-    def __build(self, current_obj, obj_hierarchy, direct_access_key_hierarchy: str = '', obj_chain_key_hierarchy: str = '', last_key: str = '', last_type = '', inner_cnt: int = 0):
+    def __build(self, current_obj, obj_hierarchy, direct_access_key_hierarchy: str = '', obj_chain_key_hierarchy: str = ''):
 
         current_object_type = type(current_obj)
 
-        if current_object_type in self.__empties.keys():
+        if current_object_type in self.__type_list:
             empty = self.__empties[current_object_type]
             if len(current_obj) == 0:
                 #add key:val pair to quick_access_data for easy flat retrieval latter
@@ -58,19 +70,17 @@ class HierarchyAndStructure:
 
                 index_key = direct_access_key_hierarchy
                 #if type(index_key) is int:
-                if type(index_key) is int or index_key.isdigit() is True:
+                if isinstance(index_key, int) or index_key.isdigit() is True:
                     index_key = 'i' + str(index_key)
 
                 setattr(obj_hierarchy, index_key, self.__inits[current_object_type])
                 return obj_hierarchy
 
             #this holds the keys which we will store in quick_access_data
-            obj_chain_template = self.__obj_chain_templates[current_object_type].replace('X', self.__separator)
+            obj_chain_template = self.__obj_chain_templates[current_object_type]
 
             #this holds the keys which we will store in py_code_access_keys
             direct_access_template = self.__direct_access_templates[current_object_type]
-        else:
-            empty = str(None)
 
         if current_object_type is dict:
             items = list(current_obj.items())
@@ -80,32 +90,23 @@ class HierarchyAndStructure:
         for key, val in items:
 
             index_key = key
-            if type(index_key) is int or index_key.isdigit() is True:
+            if isinstance(index_key, int) or index_key.isdigit() is True:
                 index_key = 'i' + str(index_key)
 
             val_type = type(val)
 
-            new_direct_access_key_hierarchy = direct_access_template.format(direct_access_key_hierarchy,str(key))
-            obj_chain_key_hierarchy = obj_chain_template.format(obj_chain_key_hierarchy,str(key))
-
-            print("last_key: {} key: {} val_type: {} last_type: {} inner_cnt: {} obj_hierarchy: {}".format(str(last_key), str(key), str(val_type), str(last_type), str(inner_cnt), obj_chain_key_hierarchy))
-            '''
-            if len(str(last_key)) == 0 or inner_cnt == 0:
-                obj_chain_key_hierarchy = key
-                print(obj_chain_key_hierarchy)
-            '''
+            new_direct_access_key_hierarchy = direct_access_template.format(direct_access_key_hierarchy, str(key))
+            new_obj_chain_key_hierarchy = obj_chain_template.format(obj_chain_key_hierarchy, str(key))
 
             if val_type in self.__type_list:
-                inner_cnt = len(val)
-                new_obj_val = self.__build(val, types.SimpleNamespace(), new_direct_access_key_hierarchy, obj_chain_key_hierarchy, key, val_type, inner_cnt)
+                new_obj_val = self.__build(val, types.SimpleNamespace(), new_direct_access_key_hierarchy, new_obj_chain_key_hierarchy)
                 setattr(obj_hierarchy, index_key, new_obj_val)
             else:
-                inner_cnt -= 1
                 new_val = str(val)
                 if val_type is str and len(new_val) == 0:
                     new_val = '""'
 
-                self.__quick_access_data[obj_chain_key_hierarchy] = new_val
+                self.__quick_access_data[new_obj_chain_key_hierarchy] = new_val
                 self.__py_code_access_keys[new_direct_access_key_hierarchy] = new_val
 
                 setattr(obj_hierarchy, index_key, new_val)
