@@ -5,7 +5,7 @@ A command line utility to inspect the hierarchy of keys and values of a json str
 Usage:
 ```
 user@base:~/dev/hands$ python3 hands.py -h
-usage: hands.py [-h] [--get GET] [--source SOURCE] [--separator SEPARATOR] [--values] [--obj_keys] [--py_keys] [--query QUERY] [--stats STATS]
+usage: hands.py [-h] [--get GET] [--source SOURCE] [--separator SEPARATOR] [--values] [--obj_keys] [--py_keys] [--query QUERY] [--stats STATS] [--no-wrap NO_WRAP]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -18,6 +18,7 @@ optional arguments:
   --py_keys             show python statements as access keys
   --query QUERY         for later
   --stats STATS         for later
+  --no-wrap NO_WRAP     for later
 ```
 
 With file:
